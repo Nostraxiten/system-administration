@@ -1,0 +1,104 @@
+# system-administration — local vulnerability and support-status database
+#
+# This file is compiled into the binary so the checker works air-gapped. A file
+# with the same format placed next to the executable, or at the path given by
+# SYSADM_VULN_DB, is loaded on top of it and takes precedence, which is how the
+# database is kept current without a rebuild and without network access.
+#
+# Format, one record per line, pipe separated:
+#
+#   kind|product|fixed_in|severity|id|description
+#
+#   kind      pkg  installed package, matched by name
+#             svc  running service, matched by the version banner
+#             os   distribution release, matched by id and version
+#   product   package, service or distribution id (lowercase)
+#   fixed_in  first version that is NOT affected; anything lower matches.
+#             Write `from..fixed` when only a range of versions is affected, so
+#             an older stable branch that never carried the flaw is not
+#             reported just for being numerically lower. This matters: the
+#             remedy distributions shipped for the xz backdoor was a downgrade
+#             to 5.4.5, which a bare `5.6.2` bound would flag as vulnerable.
+#             For `os` records this is the release that is out of support.
+#   severity  critical | attention
+#   id        CVE identifier, or EOL for support-status records
+#
+# Matching is by version number alone. Distributions routinely fix a CVE with a
+# backported patch and no version bump, so a match here is a prompt to check the
+# package changelog, not a verdict. Conversely, a branch outside the recorded
+# range is not reported even if it is older, because that is the common case
+# for a supported long-term release.
+#
+# Curated starter set of widely documented issues. Extend it with the advisory
+# feed your organisation already trusts.
+
+# --- privilege escalation -------------------------------------------------
+pkg|sudo|1.8.2..1.9.5p2|critical|CVE-2021-3156|Heap overflow in sudo (Baron Samedit) grants root to any local user, no sudo rights required.
+pkg|sudo|1.8.0..1.8.28|critical|CVE-2019-14287|A sudo rule excluding root can be bypassed with -u#-1 to run commands as root.
+pkg|sudo|1.8.0..1.9.12p2|attention|CVE-2023-22809|sudoedit lets a permitted user edit arbitrary files by injecting extra editor arguments.
+pkg|policykit-1|0.120|critical|CVE-2021-4034|pkexec argument handling (PwnKit) gives a local user a root shell.
+pkg|polkit|0.120|critical|CVE-2021-4034|pkexec argument handling (PwnKit) gives a local user a root shell.
+pkg|libc6|2.34..2.38|critical|CVE-2023-4911|Buffer overflow in the glibc dynamic loader handling GLIBC_TUNABLES (Looney Tunables) yields local root.
+pkg|glibc|2.34..2.38|critical|CVE-2023-4911|Buffer overflow in the glibc dynamic loader handling GLIBC_TUNABLES (Looney Tunables) yields local root.
+pkg|glibc|2.9..2.23|critical|CVE-2015-7547|Stack overflow in getaddrinfo allows remote code execution through crafted DNS responses.
+
+# --- remote services ------------------------------------------------------
+pkg|openssh-server|8.5..9.8|critical|CVE-2024-6387|Signal handler race in sshd (regreSSHion) allows unauthenticated remote code execution as root on glibc systems.
+svc|sshd|8.5..9.8|critical|CVE-2024-6387|Signal handler race in sshd (regreSSHion) allows unauthenticated remote code execution as root on glibc systems.
+pkg|openssh-server|5.5..9.3p2|attention|CVE-2023-38408|The PKCS#11 forwarding path in ssh-agent allows remote code execution when an agent is forwarded to a hostile host.
+pkg|openssh-server|8.0..9.6p1|attention|CVE-2023-51385|Shell metacharacters in a user or host name are executed through ProxyCommand.
+pkg|openssh-server|7.7|attention|CVE-2018-15473|sshd discloses whether a user name exists, easing targeted brute force.
+pkg|openssh-client|8.0..9.6p1|attention|CVE-2023-51385|Shell metacharacters in a user or host name are executed through ProxyCommand.
+pkg|apache2|2.4.49..2.4.51|critical|CVE-2021-42013|Path traversal and remote code execution in httpd 2.4.49 and 2.4.50 with mod_cgi enabled.
+svc|apache2|2.4.49..2.4.51|critical|CVE-2021-42013|Path traversal and remote code execution in httpd 2.4.49 and 2.4.50 with mod_cgi enabled.
+pkg|httpd|2.4.49..2.4.51|critical|CVE-2021-42013|Path traversal and remote code execution in httpd 2.4.49 and 2.4.50 with mod_cgi enabled.
+pkg|apache2|2.4.17..2.4.39|critical|CVE-2019-0211|A worker process can escalate to the parent's privileges through the scoreboard.
+pkg|nginx|0.6.18..1.21.0|attention|CVE-2021-23017|Off-by-one in the nginx resolver allows remote code execution when a resolver is configured.
+svc|nginx|0.6.18..1.21.0|attention|CVE-2021-23017|Off-by-one in the nginx resolver allows remote code execution when a resolver is configured.
+pkg|exim4|4.87..4.92|critical|CVE-2019-10149|Improper validation of the recipient address allows remote command execution as root.
+pkg|samba|4.13.17|critical|CVE-2021-44142|Out-of-bounds heap access in the vfs_fruit module allows remote code execution as root.
+pkg|redis-server|6.2.6|critical|CVE-2022-0543|Lua sandbox escape in the Debian and Ubuntu packaging allows remote code execution.
+pkg|tomcat9|9.0.0..9.0.31|critical|CVE-2020-1938|The AJP connector (Ghostcat) allows file read and, with upload, remote code execution.
+
+# --- libraries ------------------------------------------------------------
+pkg|openssl|1.0.1..1.0.1g|critical|CVE-2014-0160|Heartbleed leaks up to 64 KB of process memory, including private keys, to any client.
+svc|openssl|1.0.1..1.0.1g|critical|CVE-2014-0160|Heartbleed leaks up to 64 KB of process memory, including private keys, to any client.
+pkg|openssl|1.1.0..1.1.1l|attention|CVE-2021-3711|Buffer overflow in SM2 decryption allows remote code execution.
+pkg|openssl|3.0.0..3.0.7|attention|CVE-2022-3602|Buffer overflow in punycode handling of X.509 name constraints during certificate verification.
+pkg|openssl|3.0.0..3.0.8|attention|CVE-2023-0286|Type confusion in X.400 address processing can lead to memory disclosure during CRL checks.
+pkg|openssl|1.1.0..1.1.1t|attention|CVE-2023-0286|Type confusion in X.400 address processing can lead to memory disclosure during CRL checks (1.1.1 branch).
+pkg|bash|4.3|critical|CVE-2014-6271|Shellshock: environment variables are parsed as function definitions, allowing remote command execution through CGI and DHCP.
+svc|bash|4.3|critical|CVE-2014-6271|Shellshock: environment variables are parsed as function definitions, allowing remote command execution through CGI and DHCP.
+pkg|zlib1g|1.2.4..1.2.12|attention|CVE-2022-37434|Heap buffer over-read in inflate when processing a crafted gzip header.
+pkg|libwebp7|1.3.2|critical|CVE-2023-4863|Heap overflow in WebP lossless decoding, exploited in the wild through browsers and image processing.
+pkg|libwebp|1.3.2|critical|CVE-2023-4863|Heap overflow in WebP lossless decoding, exploited in the wild through browsers and image processing.
+pkg|xz-utils|5.6.0..5.6.2|critical|CVE-2024-3094|Backdoor injected into the 5.6.0 and 5.6.1 release tarballs, targeting sshd through liblzma.
+pkg|liblzma5|5.6.0..5.6.2|critical|CVE-2024-3094|Backdoor injected into the 5.6.0 and 5.6.1 release tarballs, targeting sshd through liblzma.
+pkg|libncurses6|6.4|attention|CVE-2023-29491|Local privilege escalation through crafted terminfo when a setuid program reads TERMINFO.
+pkg|liblog4j2-java|2.0..2.17.1|critical|CVE-2021-44228|Log4Shell: JNDI lookups in logged strings allow unauthenticated remote code execution.
+pkg|php|7.1.0..7.3.11|critical|CVE-2019-11043|Underflow in php-fpm allows remote code execution behind nginx with a common fastcgi_split_path_info pattern.
+svc|php|7.1.0..7.3.11|critical|CVE-2019-11043|Underflow in php-fpm allows remote code execution behind nginx with a common fastcgi_split_path_info pattern.
+
+# --- kernel ---------------------------------------------------------------
+svc|kernel|2.6.22..4.8.3|critical|CVE-2016-5195|Dirty COW: a race in the copy-on-write path lets any local user write to read-only mappings and gain root.
+svc|kernel|5.8..5.16.11|critical|CVE-2022-0847|Dirty Pipe: pipe buffer flags let a local user overwrite read-only files, including /etc/passwd.
+svc|kernel|3.16..5.13|critical|CVE-2021-33909|Sequoia: size_t underflow in the filesystem layer gives local root on default installations.
+svc|kernel|2.6.19..5.12|critical|CVE-2021-22555|Heap out-of-bounds write in netfilter allows local privilege escalation and container escape.
+svc|kernel|3.15..6.1.76|critical|CVE-2024-1086|Use-after-free in nf_tables gives local privilege escalation with unprivileged user namespaces enabled.
+
+# --- distribution support status ------------------------------------------
+os|ubuntu|14.04|critical|EOL|Ubuntu 14.04 LTS left standard support in April 2019. Only extended commercial maintenance remains.
+os|ubuntu|16.04|critical|EOL|Ubuntu 16.04 LTS left standard support in April 2021. Only extended commercial maintenance remains.
+os|ubuntu|18.04|critical|EOL|Ubuntu 18.04 LTS left standard support in May 2023. Only extended commercial maintenance remains.
+os|ubuntu|20.04|attention|EOL|Ubuntu 20.04 LTS left standard support in May 2025. Plan the upgrade or take out extended maintenance.
+os|debian|8|critical|EOL|Debian 8 (jessie) is out of support, including its LTS window.
+os|debian|9|critical|EOL|Debian 9 (stretch) is out of support, including its LTS window.
+os|debian|10|attention|EOL|Debian 10 (buster) left regular support in 2022 and its LTS window has closed.
+os|centos|6|critical|EOL|CentOS 6 reached end of life in November 2020 and receives no updates of any kind.
+os|centos|7|critical|EOL|CentOS 7 reached end of life in June 2024 and receives no updates of any kind.
+os|centos|8|critical|EOL|CentOS 8 was discontinued in December 2021 in favour of CentOS Stream.
+os|rhel|6|critical|EOL|RHEL 6 left maintenance support in November 2020. Only extended life support remains.
+os|rhel|7|attention|EOL|RHEL 7 left maintenance support in June 2024. Only extended life support remains.
+os|fedora|37|attention|EOL|This Fedora release is past its short support window; Fedora supports roughly 13 months per release.
+os|windows-server-2008|2008|critical|EOL|Windows Server 2008 and 2008 R2 left extended support in January 2020.
+os|windows-server-2012|2012|critical|EOL|Windows Server 2012 and 2012 R2 left extended support in October 2023.

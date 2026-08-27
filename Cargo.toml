@@ -1,0 +1,37 @@
+[package]
+name = "system-administration"
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.82"
+authors = ["system-administration contributors"]
+description = "Interactive local security posture and forensic health scanner for Linux and Windows Server"
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/Nostraxiten/system-administration"
+keywords = ["security", "audit", "forensics", "sysadmin", "hardening"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "system-administration"
+path = "src/main.rs"
+
+[dependencies]
+crossterm = "0.29"
+indicatif = "0.18"
+dialoguer = "0.12"
+walkdir = "2.5"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+
+[dependencies.sysinfo]
+version = "0.38"
+default-features = false
+features = ["system", "user", "network"]
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

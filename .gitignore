@@ -1,0 +1,6 @@
+/target
+**/*.rs.bk
+Cargo.lock.orig
+
+# Default output folder of the scanner
+/sys/

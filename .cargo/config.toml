@@ -1,0 +1,8 @@
+# Termux ships Rust's standard library for Android targets as a dynamic
+# library only (no per-crate .rlib files for the std facade: core, alloc,
+# compiler_builtins, panic_unwind, hashbrown, ...). Building anything -
+# including build scripts and proc-macros, which always link against std -
+# fails with "crate `std` required to be available in rlib format, but was
+# not found in this form" unless std is linked dynamically instead.
+[target.'cfg(target_os = "android")']
+rustflags = ["-C", "prefer-dynamic"]
