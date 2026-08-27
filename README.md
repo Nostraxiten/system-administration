@@ -12,15 +12,7 @@ without reading the whole dump.
 
 Read this in Spanish: [README.es.md](README.es.md).
 
-> [!CAUTION]
-> **NO SUPPORT FOR TERMUX.** Building from source on Termux/Android fails
-> with `error: crate `std` required to be available in rlib format, but was
-> not found in this form` — a limitation of Termux's own Rust packaging
-> (its `std` is shipped only as a dynamic library, not as `.rlib` files),
-> not something this project can fix in its own source. Track it upstream:
-> [termux/termux-packages issues](https://github.com/termux/termux-packages/issues).
-> Do not open issues here about Termux builds; they will be closed as
-> not-supported.
+<img width="600" height="366" alt="image" src="https://github.com/user-attachments/assets/ef9aad9c-da88-4cba-ab68-fd026ec6999a" />
 
 ## Table of contents
 
@@ -296,6 +288,16 @@ cargo test --all-targets
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all -- --check
 ```
+
+> [!CAUTION]
+> **NO SUPPORT FOR TERMUX.** Building from source on Termux/Android fails
+> with `error: crate `std` required to be available in rlib format, but was
+> not found in this form` — a limitation of Termux's own Rust packaging
+> (its `std` is shipped only as a dynamic library, not as `.rlib` files),
+> not something this project can fix in its own source. Track it upstream:
+> [termux/termux-packages issues](https://github.com/termux/termux-packages/issues).
+> Do not open issues here about Termux builds; they will be closed as
+> not-supported.
 
 ## Design notes
 
